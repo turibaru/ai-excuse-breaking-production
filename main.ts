@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +12,13 @@ if (!outDir) {
 const repoDir = dirname(fileURLToPath(import.meta.url));
 const src = join(repoDir, "entry.txt");
 const dest = join(outDir, "entry.txt");
+// Gate: entry must be 1-180 characters (UTF-8 code points), not whitespace-only.
+const text = readFileSync(src, "utf8");
+const len = [...text].length;
+if (len < 1 || len > 180 || text.trim().length === 0) {
+  console.error(`entry.txt must be 1-180 characters, got ${len}`);
+  process.exit(1);
+}
 try {
   mkdirSync(outDir, { recursive: true });
   copyFileSync(src, dest);
